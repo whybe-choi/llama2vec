@@ -5,6 +5,7 @@
 conda create -n llama2vec python=3.10
 conda activate llama2vec
 pip install -r requirements.txt
+pip install flash-attn --no-build-isolation
 ```
 
 ## Performance
@@ -13,6 +14,10 @@ pip install -r requirements.txt
 |Llama2Vec| 0.382 | 0.754 | 0.181 | 0.832 | 0.852(N2N) | 0.537 | 0.600 |
 |BMRETRIEVER-7B| 0.364 | 0.778 | 0.201 | 0.861 | 0.847 | 0.551 | 0.610 |
 |BM-Llama2Vec| 0.371 | 0.731 | 0.186 | 0.811 | 0.834(N2N) | 0.525 | 0.587 |
+
+## In-domain Experiment
+
+To evaluate the in-domain efficacy of the Llama2Vec approach, we also conducted experiments on the same biomedical fine-tuning datasets used by BMRETRIEVER. However, our results did not show any significant performance improvements when applying Llama2Vec under these in-domain settings. As it remains unclear whether this is due to Llama2Vec’s inherent limitations in in-domain performance or suboptimal hyperparameter/training configurations, we plan to re-run experiments with adjusted settings in the future to verify.
 
 ## Citation
 ```
