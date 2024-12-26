@@ -151,20 +151,23 @@ class Llama2VecRetriever:
 
 
 # Download and load dataset for biomedical information retrieval
-datasets = ["trec-covid", "nfcorpus", "scidocs", "scifact"]
-for dataset in datasets:
-    url = f"https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{dataset}.zip"
-    output_dir = os.path.join(pathlib.Path(__file__).parent.absolute(), "eval_datasets")
-    data_path = util.download_and_unzip(url, output_dir)
+# "nfcorpus", "scifact", "scidocs", "trec-covid"
+dataset = "nfcorpus"
+url = (
+    f"https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{dataset}.zip"
+)
+output_dir = os.path.join(pathlib.Path(__file__).parent.absolute(), "eval_datasets")
+data_path = util.download_and_unzip(url, output_dir)
 
-    # Load corpus, queries, and qrels
-    corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
+# Load corpus, queries, and qrels
+corpus, queries, qrels = GenericDataLoader(data_folder=data_path).load(split="test")
 
-    model = DRES(Llama2VecRetriever(model_path="BAAI/LLARA-beir"), batch_size=1)
-    retriever = EvaluateRetrieval(model, score_function="dot")
-    results = retriever.retrieve(corpus, queries)
+model_path = "BAAI/LLARA-beir"
+logging.info(f"Loading model: {model_path}")
 
-    # Evaluate your model with NDCG@k, MAP@K, Recall@K and Precision@K where k = [1,3,5,10,100,1000]
-    ndcg, _map, recall, precision = retriever.evaluate(
-        qrels, results, retriever.k_values
-    )
+model = DRES(Llama2VecRetriever(model_path=model_path), batch_size=8)
+retriever = EvaluateRetrieval(model, score_function="dot")
+results = retriever.retrieve(corpus, queries)
+
+# Evaluate your model with NDCG@k, MAP@K, Recall@K and Precision@K where k = [1,3,5,10,100,1000]
+ndcg, _map, recall, precision = retriever.evaluate(qrels, results, retriever.k_values)

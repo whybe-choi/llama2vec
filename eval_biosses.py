@@ -82,32 +82,40 @@ def compute_spearman_correlation(predictions, ground_truths):
 
 
 def main():
-    tokenizer = AutoTokenizer.from_pretrained("BAAI/LLARA-beir")
-    model = AutoModel.from_pretrained("BAAI/LLARA-beir")
+    model_name = "BAAI/LLARA-beir"
+
+    print(f"Loading model: {model_name}")
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name)
     model.cuda()
 
-    # Load BIOSSES dataset
     dataset = load_dataset("tabilab/biosses", split="train")
 
-    # Extract sentences and scores
     sentence1 = dataset["sentence1"]
     sentence2 = dataset["sentence2"]
     scores = dataset["score"]  # Ground-truth scores (0~4)
 
     # In the paper, SELF-SELF(S2S) is used for paraphrased documents, and NEXT-NEXT(N2N) is used for parapharased short texts.
     # The sentence pairs in BIOSSES were selected from citing sentences, i.e. sentences that have a citation to a reference article.
-    # so we use SELF-SELF(S2S)
-    dataset1 = TestDatasetForEmbedding(sentence1, tokenizer, use_next_prompt=False)
-    dataset2 = TestDatasetForEmbedding(sentence2, tokenizer, use_next_prompt=False)
+    # so we use NEXT-NEXT(N2N)
+
+    use_next_prompt = True
+    print(f"Using {'NEXT-NEXT' if use_next_prompt else 'SELF-SELF'} prompt")
+
+    dataset1 = TestDatasetForEmbedding(
+        sentence1, tokenizer, use_next_prompt=use_next_prompt
+    )
+    dataset2 = TestDatasetForEmbedding(
+        sentence2, tokenizer, use_next_prompt=use_next_prompt
+    )
 
     dataloader1 = DataLoader(dataset1, batch_size=8, shuffle=False)
     dataloader2 = DataLoader(dataset2, batch_size=8, shuffle=False)
 
-    # Generate embeddings
     embeddings1 = get_embeddings(model, dataloader1, desc="Embedding Sentence1")
     embeddings2 = get_embeddings(model, dataloader2, desc="Embedding Sentence2")
 
-    # Compute cosine similarities
     cosine_similarities = (
         torch.nn.functional.cosine_similarity(embeddings1, embeddings2).cpu().numpy()
     )
